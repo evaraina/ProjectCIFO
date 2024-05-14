@@ -1,19 +1,15 @@
 from copy import copy
 from operator import attrgetter
+from PIL import Image, ImageDraw
 from random import shuffle, choice, sample, random
 
 
 class Individual:
     # we always initialize
-    def __init__(self, representation=None, size=None, valid_set=None, repetition=True):
+    def __init__(self, representation=None, length=None, width=None, valid_set=None, repetition=True):
 
-        if representation is None:
-            if repetition:
-                # individual will be chosen from the valid_set with a specific size
-                self.representation = [choice(valid_set) for i in range(size)]
-            else:  # when I don't want repetition
-                self.representation = sample(valid_set, size)
-
+        if representation == None:
+            self.random_image(length,width)
         # if we pass an argument like Individual(my_path)
         else:
             self.representation = representation
@@ -22,11 +18,11 @@ class Individual:
         self.fitness = self.get_fitness()
 
     # methods for the class
-    def get_fitness(self):
+    def get_fitness(self,target_img):
         raise Exception("You need to monkey patch the fitness function.")
 
-    def get_neighbours(self):
-        raise Exception("You need to monkey patch the neighbourhood function.")
+    def random_image(self, length, width):
+        raise Exception("You need to monkey patch the fitness function.")
 
     def index(self, value):
         return self.representation.index(value)
@@ -72,6 +68,7 @@ class Population:
     def __getitem__(self, position):
         return self.individuals[position]
 
+    # To implement elitism
     def evolve(self, gens, xo_prob, mut_prob, select, xo, mutate, elitism):
         # gens = number of generations
         for i in range(gens):
@@ -111,4 +108,5 @@ class Population:
                 print(f"Best individual of gen #{i + 1}: {max(self, key= attrgetter('fitness'))}")
             if self.optim=='min':
                 print(f"Best individual of gen #{i + 1}: {min(self, key= attrgetter('fitness'))}")
+
 
