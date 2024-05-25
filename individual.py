@@ -9,11 +9,11 @@ class Individual:
     def __init__(self, l, w, representation = None, valid_set=None ,repetition=True):
         self.l=l
         self.w=w
-        self.fitness=None
+        self.fitness=float('inf')
         self.image=None
         self.size = l*w*3
         if representation is None:
-            self.representation = np.random.randint(0, 256, (l, w, 3), dtype=np.uint8)
+            self.representation = np.random.randint(0,256, (l,w, 3),dtype=np.uint8)
         # if we pass an argument like Individual(my_path)
         else:
             self.representation = representation
@@ -83,7 +83,7 @@ class Individual:
 
         # Compute Mean Square Error (MSE)
         self.fitness = np.mean((self.representation - target_repr) ** 2)
-        return self.fitness
+        #return self.fitness
 
 
 if __name__ == '__main__':
@@ -93,4 +93,3 @@ if __name__ == '__main__':
     target_array= np.array(target_image)
     indiv = Individual(l=tar_l, w = tar_w, representation=None,valid_set= [0,255], repetition =True)
     print(f'The fitness is:  {indiv.get_fitness_mean(target_array)}')
-
