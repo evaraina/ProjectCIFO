@@ -72,6 +72,33 @@ class Individual:
         # Compute the mean of ΔE and set it as the fitness
         self.fitness = np.mean(delta_e)
         return self.fitness
+
+    def hvs_fitness(self, target_repr):
+        """
+        Calcola la fitness utilizzando un modello del sistema visivo umano (HVS).
+
+        Args:
+        - image1 (numpy.ndarray): Prima immagine (valori RGB).
+        - image2 (numpy.ndarray): Seconda immagine (valori RGB).
+
+        Returns:
+        - fitness (float): Valutazione della similarità tra le immagini basata sul modello HVS.
+        """
+        # Conversione delle immagini in scala di grigi
+        gray1 = np.dot(self.representation[..., :3], [0.2989, 0.5870, 0.1140])
+        gray2 = np.dot(target_repr[..., :3], [0.2989, 0.5870, 0.1140])
+
+        # Calcolo della differenza assoluta
+        diff = np.abs(gray1 - gray2)
+
+        # Applicazione di un filtro di attenuazione del contrasto
+        attenuation_filter = np.exp(-diff / 100.0)
+
+        # Calcolo della media pesata per ottenere la fitness
+        self.fitness = np.mean(attenuation_filter)
+
+        return self.fitness
+
     def get_fitness_mean(self, target_repr):
         """
          Compute the fitness of the individual compare to the target image using the Mean Square Error (MSE).
@@ -83,7 +110,7 @@ class Individual:
 
         # Compute Mean Square Error (MSE)
         self.fitness = np.mean((self.representation - target_repr) ** 2)
-        #return self.fitness
+        return self.fitness
 
 
 if __name__ == '__main__':
@@ -93,3 +120,4 @@ if __name__ == '__main__':
     target_array= np.array(target_image)
     indiv = Individual(l=tar_l, w = tar_w, representation=None,valid_set= [0,255], repetition =True)
     print(f'The fitness is:  {indiv.get_fitness_mean(target_array)}')
+
