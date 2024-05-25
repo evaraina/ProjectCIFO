@@ -228,6 +228,33 @@ class IM:
 
 
 
+    def visualize_population(self):
+        """
+        Visualize the images of the population.
+
+        Args:
+            population (list): List of Individual objects.
+        """
+        num_individuals = len(self.individuals)
+        cols = 5  # Number of columns for subplots
+        rows = (num_individuals // cols) + 1  # Number of rows for subplots
+        fig, axs = plt.subplots(rows, cols, figsize=(15, 15))
+
+        for i, individual in enumerate(self.individuals):
+            ax = axs[i // cols, i % cols] if num_individuals > 1 else axs
+            ax.imshow(individual.get_image())
+            ax.set_title(f"Fitness: {individual.fitness:.2f}")
+            ax.axis('off')
+
+        # Hide empty subplots
+        for i in range(num_individuals, rows * cols):
+            ax = axs[i // cols, i % cols] if num_individuals > 1 else axs
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+
 
 
 
@@ -236,5 +263,7 @@ class IM:
 p = IM('IMG_0744.jpg', size= 50, optim='min',
        valid_set=[0,256], repetition = True )
 
-p.evolve(gens=30, xo_prob=0.9, mut_prob=0.15,
+p.evolve(gens=3, xo_prob=0.9, mut_prob=0.15,
          select=p.tournament_sel, xo=p.single_point_xo, mutate=p.inversion_mutation, elitism=True)
+
+p.visualize_population()
