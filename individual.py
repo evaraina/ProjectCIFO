@@ -1,8 +1,8 @@
-from random import randint
+import random
 from colour import Color
 from PIL import Image
 import numpy as np
-
+from matplotlib import pyplot as plt
 
 
 class Individual:
@@ -41,8 +41,7 @@ class Individual:
             Returns:
             - image (PIL.Image.Image): created image.
             """
-        image = Image.fromarray(self.representation)
-
+        image = Image.fromarray(np.uint8(self.representation))
         return image
 
     def get_representation(self, image):
@@ -75,27 +74,19 @@ class Individual:
 
     def hvs_fitness(self, target_repr):
         """
-        Calcola la fitness utilizzando un modello del sistema visivo umano (HVS).
-
-        Args:
-        - image1 (numpy.ndarray): Prima immagine (valori RGB).
-        - image2 (numpy.ndarray): Seconda immagine (valori RGB).
-
-        Returns:
-        - fitness (float): Valutazione della similarità tra le immagini basata sul modello HVS.
+        Compute the fitness using human visual system (HVS) and a scale of gray.
         """
-        # Conversione delle immagini in scala di grigi
+        # Conversion on a gray scale
         gray1 = np.dot(self.representation[..., :3], [0.2989, 0.5870, 0.1140])
         gray2 = np.dot(target_repr[..., :3], [0.2989, 0.5870, 0.1140])
 
-        # Calcolo della differenza assoluta
         diff = np.abs(gray1 - gray2)
 
         # Applicazione di un filtro di attenuazione del contrasto
         attenuation_filter = np.exp(-diff / 100.0)
 
         # Calcolo della media pesata per ottenere la fitness
-        self.fitness = np.mean(attenuation_filter)
+        self.fitness = np.sum(diff)
 
         return self.fitness
 
@@ -114,10 +105,14 @@ class Individual:
 
 
 if __name__ == '__main__':
-    target_image = Image.open(r"IMG_0744.jpg")
+    target_image = Image.open(r"IMG_0744.jpg").resize((756,1008))
     tar_l = target_image.height
     tar_w =target_image.width
     target_array= np.array(target_image)
     indiv = Individual(l=tar_l, w = tar_w, representation=None,valid_set= [0,255], repetition =True)
-    print(f'The fitness is:  {indiv.get_fitness_mean(target_array)}')
+    print(f'The fitness is:  {indiv.hvs_fitness(target_array)}')
+    fig, ax = plt.subplots(1, 1)
+    ax.imshow(indiv.get_image())
+    ax.axis('off')
+    plt.show()
 
