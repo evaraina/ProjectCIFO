@@ -16,12 +16,19 @@ class Population:
 
     def __init__(self, target_image, optim, size, **kwargs):
         original = Image.open(target_image).convert('RGB')
-        #Picture
-        #self.target_image= original.resize((302,403))
+
+        #IMG_0744
+        self.target_image= original.resize((151,202))
+
         #Circle
-        self.target_image = original.resize((250,275))
+        #self.target_image = original.resize((125,137))
+
+        #Geometric
+        #self.target_image = original.resize((180, 90))
+
         self.optim= optim
         self.size= size
+        self.target_array= np.array(self.target_image)
         self.w ,self.l = self.target_image.size
 
         #Create the population
@@ -38,7 +45,7 @@ class Population:
             )
         # Compute the fitness
         for i in range(self.size):
-            self.individuals[i].get_fitness_mean(self.target_image)
+            self.individuals[i].hvs_fitness(self.target_array)
 
 
 
@@ -75,11 +82,11 @@ class Population:
                     offspring2 = mutate(offspring2)
 
                 new_pop.append(offspring1)
-                offspring1.get_fitness_mean(self.target_image)
+                offspring1.hvs_fitness(self.target_array)
 
                 if len(new_pop) < self.size:
                     new_pop.append(offspring2)
-                    offspring2.get_fitness_mean(self.target_image)
+                    offspring2.hvs_fitness(self.target_array)
 
 
             # Replace the worst individual with the elite if elitism is used
@@ -239,16 +246,16 @@ class Population:
             population (list): List of Individual objects.
         """
         fittest_individual = max(self.individuals, key=lambda x: x.fitness)
-        fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+        fig, ax = plt.subplots(1, 1)
         ax.imshow(fittest_individual.get_image())
         ax.set_title(f"Fittest Individual (Fitness: {fittest_individual.fitness:.2f})")
         ax.axis('off')
         plt.show()
 
-p = Population('Circle.jpg', size= 50, optim='min',
+p = Population('IMG_0744.jpg', size= 100, optim='min',
        valid_set=[0,256], repetition = True )
 
-p.evolve(gens=3000, xo_prob=0.9, mut_prob=0.15,
+p.evolve(gens=20000, xo_prob=0.9, mut_prob=0.15,
          select=p.tournament_sel, xo=p.uniform_crossover, mutate=p.swap_mutation, elitism=True)
 
 p.visualize_population()
