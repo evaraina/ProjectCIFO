@@ -57,58 +57,22 @@ class Individual:
 
 
     # Create function to compute the fitness
-    def get_fitness_delta(self, target_repr):
-        """
-         Compute the fitness of the individual compare to the target image using the ΔE CIE 1976
-            Args:
-                - target_array (numpy array): array with the RGB vales of the target image
-            Returns:
-             - fitness (float)
-                """
-        # Compute the difference ΔE_CIE1976 for each pixel
-        delta_e = Color.delta_e.delta_E_CIE1976(target_repr, self.representation)
-
-        # Compute the mean of ΔE and set it as the fitness
-        self.fitness = np.mean(delta_e)
-        return self.fitness
 
     def hvs_fitness(self, target_repr):
         """
-        Calcola la fitness utilizzando un modello del sistema visivo umano (HVS).
-
-        Args:
-        - image1 (numpy.ndarray): Prima immagine (valori RGB).
-        - image2 (numpy.ndarray): Seconda immagine (valori RGB).
-
-        Returns:
-        - fitness (float): Valutazione della similarità tra le immagini basata sul modello HVS.
+        Compute the fitness using human visual system (HVS) and a scale of gray.
         """
-        # Conversione delle immagini in scala di grigi
+        # Conversion on a gray scale
         gray1 = np.dot(self.representation[..., :3], [0.2989, 0.5870, 0.1140])
         gray2 = np.dot(target_repr[..., :3], [0.2989, 0.5870, 0.1140])
 
-        # Calcolo della differenza assoluta
         diff = np.abs(gray1 - gray2)
 
-        # Applicazione di un filtro di attenuazione del contrasto
-        attenuation_filter = np.exp(-diff / 100.0)
-
-        # Calculate the weighted mean to get the fitness
-        new_fitness = np.mean(attenuation_filter)
-
-        # Check if fitness remains constant
-        if new_fitness == self.fitness:
-            self.constant_fitness_generations += 1
-            if self.constant_fitness_generations > 10:
-                raise Exception("Fitness has remained constant for too many generations. Interrupting...")
-        else:
-            self.constant_fitness_generations = 0
-
-        self.fitness = new_fitness
+        self.fitness  = np.sum(diff)
 
         return self.fitness
 
-        def get_fitness_mean(self, target_repr):
+    def get_fitness_mean(self, target_repr):
         """
          Compute the fitness of the individual compare to the target image using the Mean Square Error (MSE).
                Args:
@@ -116,21 +80,12 @@ class Individual:
                Returns:
                    -fitness (float)
                """
+
         # Compute Mean Square Error (MSE)
-        new_fitness = np.mean((self.representation - target_repr) ** 2)
-
-        # Check if fitness remains constant
-        if new_fitness == self.fitness:
-            self.constant_fitness_generations += 1
-            if self.constant_fitness_generations > 10:
-                raise Exception("Fitness has remained constant for too many generations. Interrupting...")
-
-        # If fitness changes, reset the counter
-        else:
-            self.constant_fitness_generations = 0
-
-        self.fitness = new_fitness
+        self.fitness = np.mean((self.representation - target_repr) ** 2)
         return self.fitness
+
+
 
 
 if __name__ == '__main__':
