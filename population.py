@@ -190,8 +190,10 @@ class Population:
         return Individual(p1.l,p1.w, offspring1_repr),Individual(p1.l,p1.w, offspring2_repr)
 
 
+
+
     # mutation
-    #ASK ABOUT SELF
+
     def inversion_mutation(self, individual):
         """Inversion mutation for a GA individual. Reverts a portion of the representation.
 
@@ -255,7 +257,7 @@ class Population:
 p = Population('IMG_0744.jpg', size= 100, optim='min',
        valid_set=[0,256], repetition = True )
 
-p.evolve(gens=20000, xo_prob=0.9, mut_prob=0.15,
-         select=p.tournament_sel, xo=p.uniform_crossover, mutate=p.swap_mutation, elitism=True)
+p.evolve(gens=1000, xo_prob=0.9, mut_prob=0.15,
+         select=p.selection_p, xo=p.blend_crossover, mutate=p.inversion_mutation, elitism=True)
 
 p.visualize_population()
