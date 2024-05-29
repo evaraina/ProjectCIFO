@@ -51,7 +51,10 @@ class Population:
 
     # evolve function
 
-    def evolve(self, gens, xo_prob, mut_prob, select, xo, mutate, elitism):
+ def evolve(self, gens, xo_prob, mut_prob, select, xo, mutate, elitism):
+        constant_fitness_generations = 0
+        previous_best_fitness = None
+
         for gen in range(gens):
             new_pop = []
             fittest = None
@@ -71,7 +74,6 @@ class Population:
                 # Crossover
                 if random.random() < xo_prob:
                     offspring1, offspring2 = xo(parent1, parent2)
-
                 else:
                     offspring1, offspring2 = parent1, parent2
 
@@ -87,7 +89,6 @@ class Population:
                 if len(new_pop) < self.size:
                     new_pop.append(offspring2)
                     offspring2.hvs_fitness(self.target_array)
-
 
             # Replace the worst individual with the elite if elitism is used
             if elitism:
@@ -106,10 +107,23 @@ class Population:
 
             # Logging best individual of the generation
             if self.optim == "max":
+                current_best_fitness = max(self.individuals, key=attrgetter('fitness')).fitness
                 print(f"Best individual of gen #{gen + 1}: {max(self.individuals, key=attrgetter('fitness'))}")
-
             elif self.optim == "min":
+                current_best_fitness = min(self.individuals, key=attrgetter('fitness')).fitness
                 print(f"Best individual of gen #{gen + 1}: {min(self.individuals, key=attrgetter('fitness'))}")
+
+            # Check if the fitness has remained constant
+            if previous_best_fitness is not None and current_best_fitness == previous_best_fitness:
+                constant_fitness_generations += 1
+            else:
+                constant_fitness_generations = 0
+
+            if constant_fitness_generations > 20:
+                print("Fitness has remained constant for more than 10 generations. Stopping evolution.")
+                break
+
+            previous_best_fitness = current_best_fitness
 
 
     def selection_p (self):
