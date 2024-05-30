@@ -67,7 +67,8 @@ class Population:
 
             while len(new_pop) < self.size:
                 # Selection
-                parent1, parent2 = select(self.individuals), select(self.individuals)
+                parent1= select(self.individuals)
+                parent2 = select(self.individuals)
 
                 # Crossover
                 if random.random() < xo_prob:
@@ -127,8 +128,35 @@ class Population:
         return best
 
     # Selection
-    def tournament_sel(self, tour_size=6):
-        tournament = [random.choice(self.individuals) for _ in range(6)]
+
+    def selection_p(self, population):
+        population= self.individuals
+        """
+        Fitness proportionate selection implementation.
+        """
+        if self.optim == "max":
+            total_fitness = sum([i.fitness for i in population])
+            r = uniform(0, total_fitness)
+            position = 0
+            for individual in population:
+                position += individual.fitness
+                if position > r:
+                    return individual
+        elif self.optim == "min":
+            max_fitness = max([i.fitness for i in population])
+            inverted_fitness = [max_fitness - i.fitness for i in population]
+            total_fitness = sum(inverted_fitness)
+            r = random.uniform(0, total_fitness)
+            position = 0
+            for individual, inv_fitness in zip(population, inverted_fitness):
+                position += inv_fitness
+                if position > r:
+                    return individual
+        else:
+            raise Exception(f"Optimization not specified (max/min)")
+
+    def tournament_sel(self, population, tour_size=6):
+        tournament = [random.choice(population) for _ in range(tour_size)]
         if self.optim == "max":
             return max(tournament, key=attrgetter('fitness'))
         elif self.optim == "min":
@@ -235,57 +263,22 @@ class Population:
 
 p = Population('IMG_0744.jpg', size=50, optim='min',
                    valid_set=[0, 256], repetition=True)
-gen=20000
-
+gen=10
 
 
 # First example : uniform crossover
-save_run1 = []
+save_run = []
 # Run the evolution process three times
-for i in range(7):
+for i in range(2):
     # Perform evolution for 100 generations
     result = p.evolve(gens=gen, xo_prob=0.9, mut_prob=0.15,
-                      select=p.tournament_sel, xo=p.uniform_crossover,
+                      select=p.selection_p, xo=p.uniform_crossover,
                       mutate=p.swap_mutation, elitism=True)
-    save_run1.append(result)
-    
+    save_run.append(result)
+
 # Compute the mean of the different runs
 sum_elements1 = [0] * gen
-for lst in save_run1:
+for lst in save_run:
     for i in range(gen):
         sum_elements1[i] += lst[i]
-mean_elements1 = [sum_elem / len(save_run1) for sum_elem in sum_elements1]
-
-
-
-#Second example : single point crossover
-save_run2 = []
-# Run the evolution process three times
-for i in range(7):
-    # Perform evolution for 100 generations
-    result = p.evolve(gens=gen, xo_prob=0.9, mut_prob=0.15,
-                      select=p.tournament_sel, xo=p.single_point_xo,
-                      mutate=p.swap_mutation, elitism=True)
-    save_run2.append(result)
-
-sum_elements2 = [0] * gen
-for lst in save_run2:
-    for i in range(gen):
-        sum_elements2[i] += lst[i]
-mean_elements2 = [sum_elem / len(save_run2) for sum_elem in sum_elements2]
-
-
-
-# Plot the mean elements of the two example
-plt.figure(figsize=(10, 6))
-plt.plot(mean_elements1, marker='o', linestyle='-', color='b', label='Uniform crossover')
-plt.plot(mean_elements2, marker='o', linestyle='-', color='r', label='Single point crossover')
-plt.legend()
-plt.title('Mean Elements Plot')
-plt.xlabel('Generation')
-plt.ylabel('Mean Fitness')
-plt.grid(True)
-plt.show()
-
-# Visualize the best image recreation
-p.visualize_population()
+mean_elements1 = [sum_elem / len(save_run) for sum_elem in sum_elements1]
