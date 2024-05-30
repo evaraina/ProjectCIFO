@@ -4,9 +4,7 @@ import numpy as np
 import random
 from random import uniform, choice, randint, sample
 from operator import attrgetter
-
 from matplotlib import pyplot as plt
-
 from individual import Individual
 import colour
 # from Individual import Individual
@@ -47,13 +45,13 @@ class Population:
         for i in range(self.size):
             self.individuals[i].hvs_fitness(self.target_array)
 
-
-
     # evolve function
 
- def evolve(self, gens, xo_prob, mut_prob, select, xo, mutate, elitism):
+    def evolve(self, gens, xo_prob, mut_prob, select, xo, mutate, elitism):
         constant_fitness_generations = 0
         previous_best_fitness = None
+        current_best_fitness=None
+        best=[]
 
         for gen in range(gens):
             new_pop = []
@@ -105,7 +103,7 @@ class Population:
 
             self.individuals = new_pop
 
-            # Logging best individual of the generation
+            # Logging the best individual of the generation
             if self.optim == "max":
                 current_best_fitness = max(self.individuals, key=attrgetter('fitness')).fitness
                 print(f"Best individual of gen #{gen + 1}: {max(self.individuals, key=attrgetter('fitness'))}")
@@ -120,44 +118,16 @@ class Population:
                 constant_fitness_generations = 0
 
             if constant_fitness_generations > 20:
-                print("Fitness has remained constant for more than 10 generations. Stopping evolution.")
+                print("Fitness has remained constant for more than 20 generations. Stopping evolution.")
                 break
 
             previous_best_fitness = current_best_fitness
+            best.append(current_best_fitness)
 
+        return best
 
-    def selection_p (self):
-        """Fitness proportionate selection implementation.
-
-        Args:
-            population (Population): The population we want to select from.
-
-        Returns:
-            Individual: selected individual.
-        """
-        if self.optim == "max":
-            total_fitness = sum([i.fitness for i in self.size])
-            r = uniform(0, total_fitness)
-            position = 0
-            for individual in self.size:
-                position += individual.fitness
-                if position > r:
-                    return individual
-        elif self.optim == "min":
-            max_fitness = max([i.fitness for i in self.size])
-            inverted_fitness = [max_fitness - i.fitness for i in self.size]
-            total_fitness = sum(inverted_fitness)
-            r = random.uniform(0, total_fitness)
-            position = 0
-            for individual, inv_fitness in zip(self.size, inverted_fitness):
-                position += inv_fitness
-                if position > r:
-                    return individual
-        else:
-            raise Exception(f"Optimization not specified (max/min)")
-
-    # this one
-    def tournament_sel(self, tour_size= 6):
+    # Selection
+    def tournament_sel(self, tour_size=6):
         tournament = [random.choice(self.individuals) for _ in range(6)]
         if self.optim == "max":
             return max(tournament, key=attrgetter('fitness'))
@@ -167,25 +137,20 @@ class Population:
             raise Exception("Optimization not specified or incorrect (must be 'max' or 'min')")
 
 
-    # crossover
+    # Crossover
     def single_point_xo(self, p1, p2):
-        """Implementation of single point crossover.
 
-        Args:
-            parent1 (Individual): First parent for crossover.
-            parent2 (Individual): Second parent for crossover.
-
-        Returns:
-            Individuals: Two offspring, resulting from the crossover.
-        """
         xo_point = random.randint(1, len(p1.representation) - 1)
         offspring1_repr = np.concatenate((p1.representation[:xo_point], p2.representation[xo_point:]))
         offspring2_repr = np.concatenate((p2.representation[:xo_point], p1.representation[xo_point:]))
 
         return  Individual(p1.l,p1.w, offspring1_repr), Individual(p1.l,p1.w, offspring2_repr)
 
-    # chat xo
+
     def uniform_crossover(self, p1, p2):
+        """
+            Each pixel is assign as equal to parent1 or parent2 two with a probability 0.5
+        """
         offspring1_repr = np.zeros_like(p1.representation)
         offspring2_repr = np.zeros_like(p2.representation)
         for i in range(len(p1.representation)):
@@ -198,24 +163,29 @@ class Population:
 
         return Individual(p1.l,p1.w, offspring1_repr),  Individual(p1.l,p1.w, offspring2_repr)
 
-    def blend_crossover(self,p1, p2, alpha=0.5):
-        offspring1_repr = alpha * p1.representation + (1 - alpha) * p2.representation
-        offspring2_repr= alpha * p2.representation + (1 - alpha) * p1.representation
-        return Individual(p1.l,p1.w, offspring1_repr),Individual(p1.l,p1.w, offspring2_repr)
+
+    def row_wise_crossover(self,p1, p2):
+        """
+        The row_wise_crossover randomly choose if each child row belongs to parent 1 or parent2.
+        """
+        # Get the dimensions of the image
+        rows = p1.l
+
+        offspring1_repr = p1.representation
+        offspring2_repr = p2.representation
+
+        # Randomly decide which rows to swap
+        for row in range(rows):
+            if np.random.rand() < 0.5:
+                # Swap the row between the two children
+                offspring1_repr[row, :], offspring2_repr[row, :] = p2[row, :], p1[row, :]
+        return Individual(p1.l,p1.w, offspring1_repr),  Individual(p1.l,p1.w, offspring2_repr)
 
 
-
-
-    # mutation
-
+    # Mutation
     def inversion_mutation(self, individual):
-        """Inversion mutation for a GA individual. Reverts a portion of the representation.
-
-        Args:
-            individual (Individual): A GA individual from charles.py
-
-        Returns:
-            Individual: Mutated Individual
+        """
+            Inversion mutation for a GA individual. Reverts a portion of the representation.
         """
         # Flatten the 3D array into a 1D array for easy indexing
         flat_image = individual.representation.flatten()
@@ -232,13 +202,8 @@ class Population:
         return individual
 
     def swap_mutation(self,individual):
-        """Swap mutation for a GA individual. Swaps the bits.
-
-        Args:
-            individual (Individual): A GA individual from charles.py
-
-        Returns:
-            Individual: Mutated Individual
+        """
+            Swap mutation for a GA individual. Swaps the bits.
         """
         # Flatten the 3D array into a 1D array for easy indexing
         flat_image = individual.representation.flatten()
@@ -256,10 +221,7 @@ class Population:
 
     def visualize_population(self):
         """
-        Visualize the image of the fittest individual at the last generation.
-
-        Args:
-            population (list): List of Individual objects.
+             Visualize the image of the fittest individual at the last generation.
         """
         fittest_individual = max(self.individuals, key=lambda x: x.fitness)
         fig, ax = plt.subplots(1, 1)
@@ -268,10 +230,62 @@ class Population:
         ax.axis('off')
         plt.show()
 
-p = Population('IMG_0744.jpg', size= 100, optim='min',
-       valid_set=[0,256], repetition = True )
 
-p.evolve(gens=1000, xo_prob=0.9, mut_prob=0.15,
-         select=p.selection_p, xo=p.blend_crossover, mutate=p.inversion_mutation, elitism=True)
 
+
+p = Population('IMG_0744.jpg', size=50, optim='min',
+                   valid_set=[0, 256], repetition=True)
+gen=20000
+
+
+
+# First example : uniform crossover
+save_run1 = []
+# Run the evolution process three times
+for i in range(7):
+    # Perform evolution for 100 generations
+    result = p.evolve(gens=gen, xo_prob=0.9, mut_prob=0.15,
+                      select=p.tournament_sel, xo=p.uniform_crossover,
+                      mutate=p.swap_mutation, elitism=True)
+    save_run1.append(result)
+    
+# Compute the mean of the different runs
+sum_elements1 = [0] * gen
+for lst in save_run1:
+    for i in range(gen):
+        sum_elements1[i] += lst[i]
+mean_elements1 = [sum_elem / len(save_run1) for sum_elem in sum_elements1]
+
+
+
+#Second example : single point crossover
+save_run2 = []
+# Run the evolution process three times
+for i in range(7):
+    # Perform evolution for 100 generations
+    result = p.evolve(gens=gen, xo_prob=0.9, mut_prob=0.15,
+                      select=p.tournament_sel, xo=p.single_point_xo,
+                      mutate=p.swap_mutation, elitism=True)
+    save_run2.append(result)
+
+sum_elements2 = [0] * gen
+for lst in save_run2:
+    for i in range(gen):
+        sum_elements2[i] += lst[i]
+mean_elements2 = [sum_elem / len(save_run2) for sum_elem in sum_elements2]
+
+
+
+# Plot the mean elements of the two example
+plt.figure(figsize=(10, 6))
+plt.plot(mean_elements1, marker='o', linestyle='-', color='b', label='Uniform crossover')
+plt.plot(mean_elements2, marker='o', linestyle='-', color='r', label='Single point crossover')
+plt.legend()
+plt.title('Mean Elements Plot')
+plt.xlabel('Generation')
+plt.ylabel('Mean Fitness')
+plt.grid(True)
+plt.show()
+
+# Visualize the best image recreation
 p.visualize_population()
