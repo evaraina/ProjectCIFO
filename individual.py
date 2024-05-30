@@ -14,7 +14,7 @@ class Individual:
         self.size = l*w*3
         if representation is None:
             self.representation = np.random.randint(0,256, (l,w, 3),dtype=np.uint8)
-        # if we pass an argument like Individual(my_path)
+        # if we pass an argument like Individual(representation)
         else:
             self.representation = representation
 
@@ -33,7 +33,7 @@ class Individual:
     def __repr__(self):
          return f" Fitness: {self.fitness}"
 
-    # Create function to link the representation array and the corrispondent image and viceversa
+    # Create function to link the representation array and the correspondent image and vice versa
 
     def get_image(self):
         """
@@ -46,7 +46,7 @@ class Individual:
 
     def get_representation(self, image):
         """
-        From a given image compute the corrispondent representation array with the RGB values
+        From a given image compute the correspondent representation array with the RGB values
             Args:
                 - image (PIL.Image)
             Return:
@@ -75,18 +75,13 @@ class Individual:
     def get_fitness_mean(self, target_repr):
         """
          Compute the fitness of the individual compare to the target image using the Mean Square Error (MSE).
-               Args:
-               - target_repr(numpy array): array with the RGB vales of the target image.
-               Returns:
-                   -fitness (float)
-               """
-
+        """
         # Compute Mean Square Error (MSE)
         self.fitness = np.mean((self.representation - target_repr) ** 2)
         return self.fitness
 
 
-
+# To try out Individual class functions
 
 if __name__ == '__main__':
     target_image = Image.open(r"IMG_0744.jpg").resize((756,1008))
