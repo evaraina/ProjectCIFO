@@ -259,21 +259,19 @@ class Population:
         plt.show()
 
 
+gen=20000
 
-
-p = Population('IMG_0744.jpg', size=50, optim='min',
-                   valid_set=[0, 256], repetition=True)
-gen=10
-
-
-# First example : uniform crossover
 save_run = []
-# Run the evolution process three times
-for i in range(2):
-    # Perform evolution for 100 generations
+
+for i in range(5):
+
+    p = Population('IMG_0744.jpg', size=50, optim='min',
+                   valid_set=[0, 256], repetition=True)
+
     result = p.evolve(gens=gen, xo_prob=0.9, mut_prob=0.15,
-                      select=p.selection_p, xo=p.uniform_crossover,
+                      select=p.tournament_sel, xo=p.uniform_crossover,
                       mutate=p.swap_mutation, elitism=True)
+
     save_run.append(result)
 
 # Compute the mean of the different runs
@@ -282,3 +280,18 @@ for lst in save_run:
     for i in range(gen):
         sum_elements1[i] += lst[i]
 mean_elements1 = [sum_elem / len(save_run) for sum_elem in sum_elements1]
+
+
+
+# Plot the mean elements of the two example
+plt.figure(figsize=(10, 6))
+plt.plot(mean_elements1, marker='o', linestyle='-', color='b', label='Uniform crossover')
+plt.legend()
+plt.title('Mean Fitness Plot')
+plt.xlabel('Generation')
+plt.ylabel('Mean Fitness')
+plt.grid(True)
+plt.show()
+
+# Visualize the best image recreation
+p.visualize_population()
