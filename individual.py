@@ -84,7 +84,7 @@ class Individual:
 # To try out Individual class functions
 
 if __name__ == '__main__':
-    target_image = Image.open(r"IMG_0744.jpg").resize((756,1008))
+    target_image = Image.open(r"IMG_0744.jpg").resize((151,202))
     tar_l = target_image.height
     tar_w =target_image.width
     target_array= np.array(target_image)
